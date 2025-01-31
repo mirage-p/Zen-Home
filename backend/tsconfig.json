@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES6", // Target a modern JavaScript version
+    "module": "ESNext", // Use ES module syntax
+    "moduleResolution": "node", // Resolve modules like Node.js does
+    "esModuleInterop": true, // Enable interoperability for default imports
+    "skipLibCheck": true, // Skip checking declaration files
+    "forceConsistentCasingInFileNames": true, // Ensure consistent file casing
+    "outDir": "./dist", // Output compiled JS to the dist directory
+    "allowJs": true, // Allow JavaScript files in the project
+    "resolveJsonModule": true // Enable importing JSON modules
+  },
+  "include": [
+    "src/**/*.ts" // Include TypeScript files in the src directory
+  ],
+  "exclude": [
+    "node_modules" // Exclude node_modules from compilation
+  ]
+}
