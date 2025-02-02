@@ -1,16 +1,17 @@
 import express, { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-
+const prisma = require("../utils/prisma");
 const router = express.Router();
-const prisma = new PrismaClient();
+const { isValidDateTime } = require("../utils/validDateTime");
 
 router.post("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, description, date, time } = req.body;
+
     if (!name || !date || !time) {
       res.status(400).json({ error: "Missing required fields" });
       return;
     }
+
     const existingReminder = await prisma.reminder.findFirst({
       where: {
         name,
@@ -26,9 +27,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const now = new Date();
-    const reminderDateTime = new Date(`${date}T${time}:00.000Z`);
-    if (reminderDateTime <= now) {
+    if (!isValidDateTime(date, time)) {
       res.status(400).json({
         error: "Reminder must be scheduled for a future date and time",
       });
@@ -54,7 +53,12 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
 router.get("/", async (_req: Request, res: Response): Promise<void> => {
   try {
     const reminders = await prisma.reminder.findMany();
-    res.status(200).json(reminders);
+    res.status(200).json(
+      reminders.map((reminder) => ({
+        ...reminder,
+        date: new Date(reminder.date).toISOString().split("T")[0],
+      }))
+    );
     return;
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch reminders" });
@@ -70,10 +74,12 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
     if (!reminder) {
       res.status(404).json({ error: "Reminder not found" });
       return;
-    } else {
-      res.status(200).json({ reminder });
-      return;
     }
+    res.status(200).json({
+      ...reminder,
+      date: new Date(reminder.date).toISOString().split("T")[0],
+    });
+    return;
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch reminder" });
     return;
@@ -89,15 +95,15 @@ router.put("/:id", async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: "Missing required fields" });
       return;
     }
+
     const reminder = await prisma.reminder.findUnique({ where: { id } });
+
     if (!reminder) {
       res.status(404).json({ error: "Reminder not found" });
       return;
     }
 
-    const now = new Date();
-    const reminderDateTime = new Date(`${date}T${time}:00.000Z`);
-    if (reminderDateTime <= now) {
+    if (!isValidDateTime(date, time)) {
       res.status(400).json({
         error: "Reminder must be scheduled for a future date and time",
       });
@@ -120,12 +126,14 @@ router.delete("/:id", async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const exist = await prisma.reminder.findUnique({ where: { id } });
+
     if (!exist) {
       res.status(404).json({ error: "Reminder not found" });
       return;
     }
+
     await prisma.reminder.delete({ where: { id } });
-    res.status(204).send();
+    res.status(204).end();
     return;
   } catch (error) {
     res.status(500).json({ error: "Failed to delete reminder" });
