@@ -10,6 +10,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const reminderRoutes = require("./routes/reminderRoutes");
+app.use("/reminders", reminderRoutes);
+
 app.get("/", (req, res) => {
   res.send("API Running");
 });
