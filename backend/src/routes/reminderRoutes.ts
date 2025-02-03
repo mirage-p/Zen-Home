@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
-const prisma = require("../utils/prisma");
+import prisma from "../utils/prisma";
+import isValidDateTime from "../utils/validDateTime";
 const router = express.Router();
-const { isValidDateTime } = require("../utils/validDateTime");
 
 router.post("/", async (req: Request, res: Response): Promise<void> => {
   try {
